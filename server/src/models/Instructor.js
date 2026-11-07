@@ -1,21 +1,27 @@
 import mongoose from 'mongoose';
+import crypto from 'crypto';
 
-// Instructor Portal account.
-//
-// NOTE (security lab): this model is intentionally insecure. Passwords are
-// stored in PLAINTEXT (never do this in real code) so that the NoSQL injection
-// lab can demonstrate blind $regex password extraction. The apiKey / private
-// contact fields are "trophy" data that filter-injection attacks can leak.
+function hashPassword(val) {
+  if (!val) return val;
+  // If already hashed, return as-is
+  if (val.startsWith('sha256_')) return val;
+  // Automatically hash raw passwords on set/insert
+  const hash = crypto.createHash('sha256').update(val).digest('hex');
+  return `sha256_${hash}`;
+}
+
 const instructorSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     username: { type: String, required: true, unique: true, trim: true },
-    // ⚠️ VULNERABLE (lab): plaintext password, no bcrypt hashing.
-    password: { type: String, required: true },
+    password: { 
+      type: String, 
+      required: true,
+      set: hashPassword
+    },
     department: { type: String },
-    role: { type: String, default: 'instructor' }, // 'instructor' | 'superadmin'
+    role: { type: String, default: 'instructor' },
 
-    // Sensitive "trophy" fields the directory hides but injection can leak.
     apiKey: { type: String },
     privateEmail: { type: String },
     privatePhone: { type: String }
