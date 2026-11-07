@@ -32,7 +32,7 @@ export async function loginInstructor(req, res, next) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Compute input password hash to match the stored pre-save format
+    // Match input password against plain or hashed representation
     const hashedInput = `hashed_${crypto.createHash('sha256').update(password).digest('hex')}`;
     const isMatch = instructor.password === password || instructor.password === hashedInput;
 
